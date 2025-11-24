@@ -1,0 +1,31 @@
+package com.example.myapplication.network
+
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
+object RetrofitNestClient {
+
+    // ⚠️ Replace with your NestJS port & prefix
+    private const val BASE_URL = "http://10.0.2.2:3000/"
+    // Example: NestJS often runs on localhost:3000
+
+    val apiService: CvApiService by lazy {
+
+        val logging = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
+        val client = OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .build()
+
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
+            .build()
+            .create(CvApiService::class.java)
+    }
+}

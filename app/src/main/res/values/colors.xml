@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="deepPurple">#3A0CA3</color>
+    <color name="royalPurple">#5A17C9</color>
+    <color name="vividPurple">#7B2AF1</color>
+    <color name="darkBg">#18082F</color>
+    <color name="cardPurple">#4B18C0</color>
+    <color name="lightLavender">#E9D7FF</color>
+    <color name="purple_500">#6200EE</color>
+    <color name="p_white">#FFFFFF</color>
+    <color name="p_lavender">#C9B1D9</color>
+    <color name="p_purple_light">#8A42C3</color>
+    <color name="p_purple_dark">#4B0F8E</color>
+    <color name="p_navy">#04004F</color>
+
+
+</resources>

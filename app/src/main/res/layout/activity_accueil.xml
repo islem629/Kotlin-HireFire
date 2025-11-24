@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_purple_gradient">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardJob"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="32dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:cardCornerRadius="32dp"
+        app:cardElevation="14dp"
+        android:backgroundTint="@color/p_white">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="28dp"
+            android:orientation="vertical">
+
+            <!-- HEADER -->
+            <TextView
+                android:id="@+id/tvJobMatches"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Job Matches"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@color/p_purple_dark"/>
+
+            <TextView
+                android:id="@+id/tvSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="2dp"
+                android:paddingBottom="18dp"
+                android:text="Swipe to find your perfect role"
+                android:textSize="12sp"
+                android:textColor="@color/p_lavender"/>
+
+            <!-- JOB CONTENT PANEL -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_job_panel"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tvJobTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Senior Frontend Developer"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/p_white"/>
+
+                <TextView
+                    android:id="@+id/tvCompany"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="4dp"
+                    android:text="HF Company"
+                    android:textSize="14sp"
+                    android:textColor="@color/p_lavender"/>
+
+                <TextView
+                    android:id="@+id/tvLocation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Remote"
+                    android:paddingBottom="10dp"
+                    android:textSize="12sp"
+                    android:textColor="@color/p_lavender"/>
+
+                <TextView
+                    android:id="@+id/tvDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="- Turn ideas into stunning interfaces.\n- Work with React.\n- Deliver fast, elegant UI."
+                    android:textSize="13sp"
+                    android:textColor="@color/p_white"
+                    android:paddingBottom="16dp"/>
+
+                <TextView
+                    android:id="@+id/tvCompanyTag"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="10dp"
+                    android:text="Company: HF Company"
+                    android:textColor="@color/p_white"
+                    android:textStyle="bold"
+                    android:textSize="12sp"
+                    android:background="@drawable/bg_company_tag"/>
+
+            </LinearLayout>
+
+            <!-- HINT -->
+            <TextView
+                android:id="@+id/tvSwipeHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="20dp"
+                android:paddingBottom="16dp"
+                android:text="Swipe or use buttons below"
+                android:textSize="12sp"
+                android:textColor="@color/p_lavender"/>
+
+            <!-- BUTTONS -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/btnReject"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_marginEnd="24dp"
+                    android:background="@drawable/btn_reject"
+                    android:src="@drawable/ic_close_24"
+                    android:padding="14dp"/>
+
+                <ImageView
+                    android:id="@+id/btnAccept"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:background="@drawable/btn_accept"
+                    android:src="@drawable/ic_check_24"
+                    android:padding="14dp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
