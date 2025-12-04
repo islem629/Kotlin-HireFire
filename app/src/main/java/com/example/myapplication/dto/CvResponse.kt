@@ -5,6 +5,12 @@ data class CvResponse(
     val user_id: Int,
     val headline: String?,
     val personal_info: String?,
-    val education: String?
-    // add more fields if you want
+    val technical_skills: String?,
+    val soft_skills: String?,
+    val work_experience: String?,
+    val education: String?,
+    val languages: String?,
+    val certifications: String?,
+    val projects: String?,
+    val summary: String?
 )

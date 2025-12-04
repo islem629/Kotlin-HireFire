@@ -1,20 +1,28 @@
 package com.example.myapplication
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import androidx.lifecycle.lifecycleScope
 import com.example.myapplication.model.Job
 import com.example.myapplication.network.RetrofitJobClient
+import com.google.android.material.appbar.MaterialToolbar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import com.example.myapplication.dto.*
 
 class AccueilActivity : AppCompatActivity() {
 
-    private val jobs = mutableListOf<JobModel>()
+    // 👉 Now we store backend Job objects directly
+    private val jobs = mutableListOf<Job>()
     private var currentIndex = 0
 
     // Views
@@ -29,10 +37,24 @@ class AccueilActivity : AppCompatActivity() {
     private lateinit var tvSwipeHint: TextView
     private lateinit var btnAccept: ImageView
     private lateinit var btnReject: ImageView
+    private lateinit var topAppBar: MaterialToolbar
+    private lateinit var authResponse: AuthResponse
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_accueil)
+        topAppBar = findViewById(R.id.topAppBar)
+        val token = intent.getStringExtra("token") ?: ""
+        val userId = intent.getLongExtra("userId", -1L)
+        val email = intent.getStringExtra("email") ?: ""
+        val username = intent.getStringExtra("username") ?: ""
+        authResponse = AuthResponse(
+            token = token,
+            userId = userId,
+            email = email,
+            username=username
+        )
+        setupTopBar()
 
         bindViews()
         fetchRecommendedJobs()
@@ -55,11 +77,13 @@ class AccueilActivity : AppCompatActivity() {
         btnReject.setOnClickListener { onRejectJob() }
     }
 
+    // -----------------------------
+    // Like / Dislike
+    // -----------------------------
     private fun onAcceptJob() {
         if (currentIndex < jobs.size) {
             val job = jobs[currentIndex]
-            showToast("You liked ${job.title}")
-            showNextJob()
+            applyToJob(job)   // use coroutine version
         }
     }
 
@@ -81,10 +105,10 @@ class AccueilActivity : AppCompatActivity() {
         }
     }
 
-    private fun showJob(job: JobModel) {
+    private fun showJob(job: Job) {
         tvJobTitle.text = job.title
         tvCompany.text = job.company
-        tvLocation.text = job.location
+        tvLocation.text = "Remote"          // backend has no location, so default
         tvDescription.text = job.description
         tvCompanyTag.text = "Company : ${job.company}"
 
@@ -110,20 +134,17 @@ class AccueilActivity : AppCompatActivity() {
     }
 
     // -----------------------------
-    // 🔥 Fetch recommended jobs via Retrofit
+    // Fetch recommended jobs (still using enqueue here)
     // -----------------------------
     private fun fetchRecommendedJobs() {
-        // 1) Get token from SharedPreferences
         val prefs = getSharedPreferences("auth", MODE_PRIVATE)
         val token = prefs.getString("token", null)
 
         if (token.isNullOrEmpty()) {
             showToast("Please log in first to see recommendations")
-            // Optional: loadFakeJobs() as fallback if you want
             return
         }
 
-        // 2) Call backend
         RetrofitJobClient.apiService.getRecommendedJobs("Bearer $token")
             .enqueue(object : Callback<List<Job>> {
                 override fun onResponse(
@@ -134,17 +155,7 @@ class AccueilActivity : AppCompatActivity() {
                         val jobList = response.body() ?: emptyList()
 
                         jobs.clear()
-
-                        // Convert backend Job → UI JobModel
-                        for (job in jobList) {
-                            val jobModel = JobModel(
-                                title = job.title,
-                                company = job.company,
-                                location = "Remote", // no location in backend, so default
-                                description = job.description
-                            )
-                            jobs.add(jobModel)
-                        }
+                        jobs.addAll(jobList)   // 👈 keep Job objects directly
 
                         currentIndex = 0
                         if (jobs.isNotEmpty()) {
@@ -165,7 +176,76 @@ class AccueilActivity : AppCompatActivity() {
             })
     }
 
+    // -----------------------------
+    // Apply to job with lifecycleScope + suspend endpoint
+    // -----------------------------
+    private fun applyToJob(job: Job) {
+        val prefs = getSharedPreferences("auth", MODE_PRIVATE)
+        val token = prefs.getString("token", null)
+
+        if (token.isNullOrEmpty()) {
+            showToast("Please log in first")
+            return
+        }
+
+        lifecycleScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    RetrofitJobClient.apiService.applyToJob(job.id, "Bearer $token")
+                }
+
+                if (response.isSuccessful) {
+                    showToast("Application sent for ${job.title}")
+                    showNextJob()
+                } else {
+                    showToast("Failed to apply: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                showToast("Network error: ${e.message}")
+            }
+        }
+    }
+
     private fun showToast(msg: String) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
+    private fun setupTopBar() {
+        topAppBar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_profile -> {
+                    openUserProfile()
+                    true
+                }
+                R.id.action_logout -> {
+                    performLogout()
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    private fun openUserProfile() {
+        val intent = Intent(this, UserProfileActivity::class.java)
+        intent.putExtra("token", authResponse.token)
+        intent.putExtra("userId", authResponse.userId)
+        intent.putExtra("email", authResponse.email)
+        intent.putExtra("username", authResponse.username)
+        // if you add username later:
+        // intent.putExtra("username", someUsername)
+        startActivity(intent)
+    }
+
+    private fun performLogout() {
+        // example: clear saved token from SharedPreferences if you have it
+        // getSharedPreferences("auth", MODE_PRIVATE).edit().clear().apply()
+
+        Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show()
+
+        // Go back to LoginActivity (or whatever your start screen is)
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+    }
 }
+

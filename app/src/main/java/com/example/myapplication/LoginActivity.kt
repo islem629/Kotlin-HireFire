@@ -24,6 +24,8 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var tvGoToSignUp: TextView
     private lateinit var btnBack: Button
 
+    private lateinit var authResponse: AuthResponse   // will be set after successful login
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -31,9 +33,8 @@ class LoginActivity : AppCompatActivity() {
         // IDs must match your activity_login.xml
         etEmail = findViewById(R.id.etEmail)
         etPassword = findViewById(R.id.etPassword)
-
-        btnLogin = findViewById(R.id.btnSignUpSubmit)
-        tvGoToSignUp = findViewById(R.id.tvGoToLogin)
+        btnLogin = findViewById(R.id.btnSignUpSubmit)  // change if your id is different
+        tvGoToSignUp = findViewById(R.id.tvGoToLogin)  // change if your id is different
         btnBack = findViewById(R.id.btnBackLogin)
 
         btnLogin.setOnClickListener { loginUser() }
@@ -70,27 +71,31 @@ class LoginActivity : AppCompatActivity() {
                 ) {
                     if (response.isSuccessful) {
                         val body = response.body()
-                        val token = body?.token
-                        val userId = body?.userId
 
-                        if (!token.isNullOrEmpty() && userId != null) {
-                            val prefs = getSharedPreferences("auth", MODE_PRIVATE)
-                            prefs.edit()
-                                .putString("token", token)
-                                .putLong("userId", userId)
-                                .apply()
-                        }
-
-                        if (userId != null) {
-                            // After login, check if this user already has a CV
-                            checkUserCv(userId)
-                        } else {
+                        if (body == null) {
                             Toast.makeText(
                                 this@LoginActivity,
-                                "No userId returned from backend",
+                                "Empty response from server",
                                 Toast.LENGTH_LONG
                             ).show()
+                            return
                         }
+
+                        authResponse = body
+                        val token = body.token
+                        val userId = body.userId
+                        val email = body.email
+
+                        // Save token + userId locally
+                        val prefs = getSharedPreferences("auth", MODE_PRIVATE)
+                        prefs.edit()
+                            .putString("token", token)
+                            .putLong("userId", userId)
+                            .putString("email", email)
+                            .apply()
+
+                        // After login, check if this user already has a CV (Nest)
+                        checkUserCv(userId)
                     } else {
                         Toast.makeText(
                             this@LoginActivity,
@@ -119,11 +124,16 @@ class LoginActivity : AppCompatActivity() {
                     response: Response<CvResponse>
                 ) {
                     if (response.isSuccessful) {
-                        // CV exists → go to Accueil
-                        startActivity(Intent(this@LoginActivity, AccueilActivity::class.java))
+                        // ✅ CV exists → go to Accueil
+                        val intent = Intent(this@LoginActivity, AccueilActivity::class.java)
+                        intent.putExtra("token", authResponse.token)
+                        intent.putExtra("userId", authResponse.userId)
+                        intent.putExtra("email", authResponse.email)
+                        intent.putExtra("username", authResponse.username)
+                        startActivity(intent)
                         finish()
                     } else {
-                        // No CV or 404 → go to CV form
+                        // ❌ No CV / 404 → go create CV
                         goToCvForm()
                     }
                 }
@@ -136,7 +146,10 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun goToCvForm() {
-        val intent = Intent(this, CvFormActivity::class.java)
+        val intent = Intent(this@LoginActivity, CvFormActivity::class.java)
+        intent.putExtra("token", authResponse.token)
+        intent.putExtra("userId", authResponse.userId)
+        intent.putExtra("email", authResponse.email)
         startActivity(intent)
         finish()
     }

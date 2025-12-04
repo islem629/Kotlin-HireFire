@@ -23,16 +23,27 @@ class CvFormActivity : AppCompatActivity() {
         val sectionEducation = findViewById<LinearLayout>(R.id.sectionEducation)
         val sectionOptional = findViewById<LinearLayout>(R.id.sectionOptional)
 
-        // Inputs
+        // Inputs Personal
         val etFullName = findViewById<TextInputEditText>(R.id.etFullName)
         val etEmail = findViewById<TextInputEditText>(R.id.etEmail)
         val etPhone = findViewById<TextInputEditText>(R.id.etPhone)
 
+        // Professional
         val etProfessionalTitle = findViewById<TextInputEditText>(R.id.etProfessionalTitle)
 
+        // Education
         val rgDegreeType = findViewById<RadioGroup>(R.id.rgDegreeType)
         val etDegreeSpeciality = findViewById<TextInputEditText>(R.id.etDegreeSpeciality)
         val etDegreeYear = findViewById<TextInputEditText>(R.id.etDegreeYear)
+
+        // Optional Section Inputs
+        val etTechSkills = findViewById<TextInputEditText>(R.id.etTechnicalSkills)
+        val etSoftSkills = findViewById<TextInputEditText>(R.id.etSoftSkills)
+        val etWorkExperience = findViewById<TextInputEditText>(R.id.etWorkExperience)
+        val etLanguages = findViewById<TextInputEditText>(R.id.etLanguages)
+        val etCertifications = findViewById<TextInputEditText>(R.id.etCertifications)
+        val etProjects = findViewById<TextInputEditText>(R.id.etProjects)
+        val etSummary = findViewById<TextInputEditText>(R.id.etSummary)
 
         val btnBackCv = findViewById<Button>(R.id.btnBackCv)
         val btnSaveCv = findViewById<Button>(R.id.btnSaveCv)
@@ -51,7 +62,6 @@ class CvFormActivity : AppCompatActivity() {
         btnSaveCv.setOnClickListener {
             when (currentStep) {
 
-                // STEP 1 → STEP 2
                 1 -> {
                     if (validatePersonal(etFullName, etEmail, etPhone)) {
                         sectionPersonal.visibility = View.GONE
@@ -60,7 +70,6 @@ class CvFormActivity : AppCompatActivity() {
                     }
                 }
 
-                // STEP 2 → STEP 3
                 2 -> {
                     if (validateProfessional(etProfessionalTitle)) {
                         sectionProfessional.visibility = View.GONE
@@ -69,7 +78,6 @@ class CvFormActivity : AppCompatActivity() {
                     }
                 }
 
-                // STEP 3 → STEP 4
                 3 -> {
                     if (validateEducation(rgDegreeType, etDegreeSpeciality, etDegreeYear)) {
                         sectionEducation.visibility = View.GONE
@@ -79,8 +87,6 @@ class CvFormActivity : AppCompatActivity() {
                     }
                 }
 
-                // FINAL SAVE
-                // FINAL SAVE
                 4 -> {
                     if (
                         validatePersonal(etFullName, etEmail, etPhone) &&
@@ -88,20 +94,18 @@ class CvFormActivity : AppCompatActivity() {
                         validateEducation(rgDegreeType, etDegreeSpeciality, etDegreeYear)
                     ) {
                         saveCvToBackend(
-                            etFullName,
-                            etEmail,
-                            etPhone,
+                            etFullName, etEmail, etPhone,
                             etProfessionalTitle,
-                            rgDegreeType,
-                            etDegreeSpeciality,
-                            etDegreeYear
+                            rgDegreeType, etDegreeSpeciality, etDegreeYear,
+                            etTechSkills, etSoftSkills, etWorkExperience,
+                            etLanguages, etCertifications, etProjects, etSummary
                         )
                     }
                 }
-
             }
         }
     }
+
     private fun saveCvToBackend(
         etFullName: TextInputEditText,
         etEmail: TextInputEditText,
@@ -109,9 +113,16 @@ class CvFormActivity : AppCompatActivity() {
         etProfessionalTitle: TextInputEditText,
         rgDegreeType: RadioGroup,
         etDegreeSpeciality: TextInputEditText,
-        etDegreeYear: TextInputEditText
+        etDegreeYear: TextInputEditText,
+        etTechSkills: TextInputEditText,
+        etSoftSkills: TextInputEditText,
+        etWorkExperience: TextInputEditText,
+        etLanguages: TextInputEditText,
+        etCertifications: TextInputEditText,
+        etProjects: TextInputEditText,
+        etSummary: TextInputEditText
     ) {
-        // 1) Get userId + token from SharedPreferences
+
         val prefs = getSharedPreferences("auth", MODE_PRIVATE)
         val userId = prefs.getLong("userId", -1L)
         val token = prefs.getString("token", null)
@@ -123,43 +134,48 @@ class CvFormActivity : AppCompatActivity() {
             return
         }
 
-        // 2) Build simple strings for backend fields
         val fullName = etFullName.text.toString().trim()
         val email = etEmail.text.toString().trim()
         val phone = etPhone.text.toString().trim()
         val title = etProfessionalTitle.text.toString().trim()
 
+        // Optional fields
+        val techSkills = etTechSkills.text.toString().trim().ifEmpty { null }
+        val softSkills = etSoftSkills.text.toString().trim().ifEmpty { null }
+        val workExp = etWorkExperience.text.toString().trim().ifEmpty { null }
+        val languages = etLanguages.text.toString().trim().ifEmpty { null }
+        val certifications = etCertifications.text.toString().trim().ifEmpty { null }
+        val projects = etProjects.text.toString().trim().ifEmpty { null }
+        val summary = etSummary.text.toString().trim().ifEmpty { null }
+
         val degreeTypeId = rgDegreeType.checkedRadioButtonId
-        val degreeType = if (degreeTypeId != -1) {
+        val degreeType = if (degreeTypeId != -1)
             findViewById<RadioButton>(degreeTypeId).text.toString()
-        } else {
-            ""
-        }
+        else ""
+
         val speciality = etDegreeSpeciality.text.toString().trim()
         val year = etDegreeYear.text.toString().trim()
 
         val personalInfo = "Name: $fullName\nEmail: $email\nPhone: $phone"
         val education = "$degreeType - $speciality ($year)"
 
-        // 3) Create request object
         val cvRequest = CvRequest(
             user_id = userId.toInt(),
             headline = title,
             personal_info = personalInfo,
-            technical_skills = null,
-            soft_skills = null,
-            work_experience = null,
+            technical_skills = techSkills,
+            soft_skills = softSkills,
+            work_experience = workExp,
             education = education,
-            languages = null,
-            certifications = null,
-            projects = null,
-            summary = null
+            languages = languages,
+            certifications = certifications,
+            projects = projects,
+            summary = summary
         )
 
-        // 4) Call API
         RetrofitNestClient.apiService.createCv(
-            authHeader = "Bearer $token",
-            cvRequest = cvRequest
+            "Bearer $token",
+            cvRequest
         ).enqueue(object : retrofit2.Callback<CvResponse> {
             override fun onResponse(
                 call: retrofit2.Call<CvResponse>,
@@ -187,7 +203,6 @@ class CvFormActivity : AppCompatActivity() {
             }
         })
     }
-
 
     // ---------------------------
     // VALIDATIONS

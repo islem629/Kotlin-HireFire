@@ -6,5 +6,6 @@ data class Job(
     val description: String,
     val company: String,
     val dateDebut: String?,
-    val dateExpired: String?
+    val dateExpired: String?,
+    val companyEmail: String
 )
